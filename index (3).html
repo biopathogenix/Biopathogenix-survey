@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BioPathogenix Client Experience Survey</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+  <!-- EmailJS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+</head>
+<body>
+<!-- Hidden form so Netlify detects and registers the form on deploy -->
+<form name="biopathogenix-survey" data-netlify="true" netlify-honeypot="bot-field" hidden>
+  <input type="text" name="name"/>
+  <input type="text" name="org"/>
+  <input type="email" name="email"/>
+  <input type="text" name="role"/>
+  <input type="text" name="source"/>
+  <input type="text" name="validationFASRating"/>
+  <textarea name="fasComment"></textarea>
+  <textarea name="workflowSuggestions"></textarea>
+  <input type="text" name="satisfaction"/>
+  <input type="text" name="productsInterested"/>
+  <input type="text" name="nps"/>
+</form>
+<div id="root"></div>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #f4f6f9;
+    color: #1a2b3c;
+    line-height: 1.5;
+    padding: 24px 16px;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; }
+  .card {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 2px 16px rgba(20,40,70,0.08);
+    overflow: hidden;
+  }
+  .logo-bar {
+    background: #fff;
+    padding: 20px 28px;
+    border-bottom: 1px solid #eef1f5;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .logo-mark { width: 42px; height: 42px; flex-shrink: 0; }
+  .logo-text { font-size: 24px; font-weight: 700; letter-spacing: -0.5px; }
+  .logo-text .bio { color: #1a3a6b; }
+  .logo-text .path { color: #2e6fc7; }
+  .header {
+    background: linear-gradient(135deg, #0d4f8b 0%, #11796f 100%);
+    color: #fff;
+    padding: 28px;
+  }
+  .header h1 { font-size: 21px; font-weight: 700; letter-spacing: -0.3px; }
+  .header p { margin-top: 8px; font-size: 14px; opacity: 0.92; }
+  .body { padding: 28px; }
+  .q { margin-bottom: 28px; padding-bottom: 24px; border-bottom: 1px solid #eef1f5; }
+  .q:last-of-type { border-bottom: none; }
+  .q-label { font-weight: 600; font-size: 15px; margin-bottom: 12px; display: block; }
+  .q-label .num { color: #0d4f8b; margin-right: 6px; }
+  .req { color: #c0392b; font-weight: 700; margin-left: 3px; }
+  .opt { color: #8a97a6; font-weight: 400; font-size: 13px; margin-left: 4px; }
+  .options { display: flex; flex-direction: column; gap: 8px; }
+  .opt-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px; border: 1.5px solid #e3e8ef; border-radius: 9px;
+    cursor: pointer; transition: all 0.15s; font-size: 14px;
+  }
+  .opt-row:hover { border-color: #0d4f8b; background: #f7fafd; }
+  .opt-row.checked { border-color: #0d4f8b; background: #eef5fc; }
+  .opt-row input { width: 17px; height: 17px; accent-color: #0d4f8b; cursor: pointer; }
+  input[type=text], input[type=email], textarea {
+    width: 100%; padding: 11px 13px; border: 1.5px solid #e3e8ef;
+    border-radius: 9px; font-size: 14px; font-family: inherit; color: #1a2b3c;
+    transition: border-color 0.15s;
+  }
+  input:focus, textarea:focus { outline: none; border-color: #0d4f8b; }
+  textarea { resize: vertical; min-height: 80px; }
+  .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .field-grid .full { grid-column: 1 / -1; }
+  .field-label { font-size: 13px; font-weight: 600; margin-bottom: 6px; display: block; color: #44546a; }
+  .other-input { margin-top: 8px; }
+  .scale { display: flex; gap: 6px; flex-wrap: wrap; }
+  .scale-btn {
+    flex: 1; min-width: 38px; padding: 12px 4px; border: 1.5px solid #e3e8ef;
+    border-radius: 8px; background: #fff; cursor: pointer; font-size: 14px;
+    font-weight: 600; transition: all 0.15s; text-align: center;
+  }
+  .scale-btn:hover { border-color: #0d4f8b; }
+  .scale-btn.active { background: #0d4f8b; color: #fff; border-color: #0d4f8b; }
+  .scale-ends { display: flex; justify-content: space-between; font-size: 12px; color: #8a97a6; margin-top: 6px; }
+  .sat-scale { display: flex; gap: 6px; }
+  .sat-btn {
+    flex: 1; padding: 11px 6px; border: 1.5px solid #e3e8ef; border-radius: 8px;
+    background: #fff; cursor: pointer; font-size: 12.5px; font-weight: 500;
+    transition: all 0.15s; text-align: center; line-height: 1.3;
+  }
+  .sat-btn:hover { border-color: #11796f; }
+  .sat-btn.active { background: #11796f; color: #fff; border-color: #11796f; }
+  .actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
+  .btn {
+    padding: 13px 24px; border: none; border-radius: 9px; font-size: 15px;
+    font-weight: 600; cursor: pointer; transition: all 0.15s; font-family: inherit;
+  }
+  .btn-primary { background: #0d4f8b; color: #fff; }
+  .btn-primary:hover { background: #0a3e6e; }
+  .btn-primary:disabled { background: #7fa8cc; cursor: not-allowed; }
+  .btn-secondary { background: #fff; color: #0d4f8b; border: 1.5px solid #0d4f8b; }
+  .btn-secondary:hover { background: #eef5fc; }
+  .error-banner {
+    background: #fdecea; color: #c0392b; padding: 12px 16px; border-radius: 9px;
+    font-size: 14px; margin-bottom: 20px; border: 1px solid #f5c6c0;
+  }
+  .success {
+    text-align: center; padding: 50px 28px;
+  }
+  .success .check {
+    width: 64px; height: 64px; background: #11796f; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;
+    color: #fff; font-size: 32px;
+  }
+  .success h2 { font-size: 22px; margin-bottom: 10px; }
+  .success p { color: #5a6b7c; font-size: 15px; margin-bottom: 24px; }
+  .admin-bar {
+    max-width: 720px; margin: 16px auto 0; text-align: center;
+  }
+  .admin-link {
+    color: #8a97a6; font-size: 13px; cursor: pointer; text-decoration: underline;
+    background: none; border: none; font-family: inherit;
+  }
+  .admin-panel {
+    background: #fff; border-radius: 14px; padding: 24px; margin-top: 14px;
+    box-shadow: 0 2px 16px rgba(20,40,70,0.08);
+  }
+  .admin-panel h3 { font-size: 17px; margin-bottom: 14px; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th, td { padding: 7px 9px; text-align: left; border-bottom: 1px solid #eef1f5; }
+  th { background: #f7fafd; font-weight: 600; color: #44546a; white-space: nowrap; }
+  td { vertical-align: top; }
+  .muted { color: #8a97a6; font-size: 13px; }
+  .clear-btn {
+    background: none; border: 1px solid #e3e8ef; color: #8a97a6;
+    padding: 6px 12px; border-radius: 7px; font-size: 12px; cursor: pointer;
+    font-family: inherit;
+  }
+  .clear-btn:hover { border-color: #c0392b; color: #c0392b; }
+  @media (max-width: 560px) {
+    .field-grid { grid-template-columns: 1fr; }
+    .sat-btn { font-size: 11px; }
+  }
+</style>
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+// ─── EmailJS Config ───────────────────────────────────────────────
+const EMAILJS_PUBLIC_KEY  = "QXmszPN0KD4BJ5XrW";
+const EMAILJS_SERVICE_ID  = "service feed back";   // your Service ID
+const EMAILJS_TEMPLATE_ID = "template_1mjq977";
+// ──────────────────────────────────────────────────────────────────
+
+const SOURCES = ["Referral or peer recommendation","Conference or trade show","Web search","Sales representative","Industry publication","Other"];
+const PRODUCTS = ["Molecular assays / PCR kits","Validation & verification services","Reagents & consumables","Instrumentation","LIMS / software integration","Quality control materials","Training & support packages","Other"];
+const SAT = ["Very dissatisfied","Dissatisfied","Neutral","Satisfied","Very satisfied"];
+
+const STORAGE_KEY = "bpx_survey_responses";
+
+// Load responses from localStorage
+const loadResponses = () => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch(e) { return []; }
+};
+
+// Save responses to localStorage
+const saveResponses = (responses) => {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(responses)); }
+  catch(e) { console.warn("localStorage save failed", e); }
+};
+
+// Build the HTML email body that will appear in Outlook
+const buildEmailHTML = (r) => `
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"/></head>
+<body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f4f6f9;margin:0;padding:24px;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="max-width:640px;margin:0 auto;">
+    <tr><td>
+      <!-- Header -->
+      <table width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg,#0d4f8b,#11796f);border-radius:12px 12px 0 0;overflow:hidden;">
+        <tr>
+          <td style="padding:24px 28px;">
+            <table cellpadding="0" cellspacing="0">
+              <tr>
+                <td style="padding-right:12px;">
+                  <div style="width:40px;height:40px;background:#fff;border-radius:50%;display:inline-block;line-height:40px;text-align:center;font-weight:900;color:#0d4f8b;font-size:18px;">B</div>
+                </td>
+                <td>
+                  <span style="font-size:22px;font-weight:700;color:#fff;letter-spacing:-0.5px;"><span style="color:#a8c8f0;">Bio</span>Pathogenix</span>
+                </td>
+              </tr>
+            </table>
+            <h1 style="color:#fff;font-size:18px;margin:16px 0 4px;font-weight:700;">New Survey Response</h1>
+            <p style="color:rgba(255,255,255,0.85);font-size:13px;margin:0;">Submitted ${new Date(r.submittedAt).toLocaleString()}</p>
+          </td>
+        </tr>
+      </table>
+
+      <!-- Body -->
+      <table width="100%" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:0 0 12px 12px;border:1px solid #e3e8ef;border-top:none;">
+        <tr><td style="padding:28px;">
+
+          <!-- Contact Info -->
+          <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;background:#f7fafd;border-radius:10px;overflow:hidden;">
+            <tr><td style="padding:14px 18px;border-bottom:1px solid #eef1f5;">
+              <span style="font-size:11px;font-weight:700;color:#0d4f8b;text-transform:uppercase;letter-spacing:0.8px;">Contact Information</span>
+            </td></tr>
+            <tr><td style="padding:16px 18px;">
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td width="50%" style="padding-bottom:10px;vertical-align:top;">
+                    <div style="font-size:11px;color:#8a97a6;font-weight:600;margin-bottom:3px;">FULL NAME</div>
+                    <div style="font-size:14px;color:#1a2b3c;font-weight:600;">${r.name}</div>
+                  </td>
+                  <td width="50%" style="padding-bottom:10px;vertical-align:top;">
+                    <div style="font-size:11px;color:#8a97a6;font-weight:600;margin-bottom:3px;">ORGANIZATION</div>
+                    <div style="font-size:14px;color:#1a2b3c;font-weight:600;">${r.org}</div>
+                  </td>
+                </tr>
+                <tr>
+                  <td width="50%" style="vertical-align:top;">
+                    <div style="font-size:11px;color:#8a97a6;font-weight:600;margin-bottom:3px;">EMAIL</div>
+                    <div style="font-size:14px;color:#0d4f8b;">${r.email}</div>
+                  </td>
+                  <td width="50%" style="vertical-align:top;">
+                    <div style="font-size:11px;color:#8a97a6;font-weight:600;margin-bottom:3px;">ROLE / TITLE</div>
+                    <div style="font-size:14px;color:#1a2b3c;">${r.role || '—'}</div>
+                  </td>
+                </tr>
+              </table>
+            </td></tr>
+          </table>
+
+          <!-- Q1 Source -->
+          <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;">
+            <tr>
+              <td style="padding-bottom:6px;">
+                <span style="font-size:11px;font-weight:700;color:#0d4f8b;text-transform:uppercase;letter-spacing:0.8px;">Q1 — How They Found Us</span>
+              </td>
+            </tr>
+            <tr>
+              <td style="background:#eef5fc;border-radius:8px;padding:12px 16px;font-size:14px;color:#1a2b3c;">${r.source}</td>
+            </tr>
+          </table>
+
+          <!-- Q2 FAS Rating -->
+          <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;">
+            <tr><td style="padding-bottom:6px;">
+              <span style="font-size:11px;font-weight:700;color:#0d4f8b;text-transform:uppercase;letter-spacing:0.8px;">Q2 — Validation / FAS Rating</span>
+            </td></tr>
+            <tr><td>
+              <table cellpadding="0" cellspacing="0">
+                <tr>
+                  ${[1,2,3,4,5].map(n=>`<td style="padding-right:6px;"><div style="width:36px;height:36px;border-radius:8px;text-align:center;line-height:36px;font-size:14px;font-weight:700;background:${String(r.validationFASRating)===String(n)?'#0d4f8b':'#f7fafd'};color:${String(r.validationFASRating)===String(n)?'#fff':'#8a97a6'};border:1.5px solid ${String(r.validationFASRating)===String(n)?'#0d4f8b':'#e3e8ef'};">${n}</div></td>`).join('')}
+                  <td style="padding-left:10px;font-size:14px;color:#44546a;font-weight:600;">${r.validationFASRating}/5</td>
+                </tr>
+              </table>
+            </td></tr>
+            ${r.fasComment ? `<tr><td style="padding-top:10px;font-size:13px;color:#5a6b7c;background:#f7fafd;border-radius:8px;padding:10px 14px;margin-top:8px;display:block;">${r.fasComment}</td></tr>` : ''}
+          </table>
+
+          <!-- Q3 Workflow -->
+          ${r.workflowSuggestions ? `
+          <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;">
+            <tr><td style="padding-bottom:6px;">
+              <span style="font-size:11px;font-weight:700;color:#0d4f8b;text-transform:uppercase;letter-spacing:0.8px;">Q3 — Workflow Suggestions</span>
+            </td></tr>
+            <tr><td style="background:#f7fafd;border-radius:8px;padding:12px 16px;font-size:14px;color:#1a2b3c;">${r.workflowSuggestions}</td></tr>
+          </table>` : ''}
+
+          <!-- Q4 Satisfaction -->
+          <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;">
+            <tr><td style="padding-bottom:6px;">
+              <span style="font-size:11px;font-weight:700;color:#0d4f8b;text-transform:uppercase;letter-spacing:0.8px;">Q4 — Overall Satisfaction</span>
+            </td></tr>
+            <tr><td>
+              <span style="display:inline-block;background:${
+                r.satisfaction==='Very satisfied'?'#11796f':
+                r.satisfaction==='Satisfied'?'#1e9b7a':
+                r.satisfaction==='Neutral'?'#8a97a6':
+                r.satisfaction==='Dissatisfied'?'#e67e22':'#c0392b'
+              };color:#fff;font-size:13px;font-weight:700;padding:7px 16px;border-radius:20px;">${r.satisfaction}</span>
+            </td></tr>
+          </table>
+
+          <!-- Q5 Products -->
+          ${r.productsInterested ? `
+          <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;">
+            <tr><td style="padding-bottom:6px;">
+              <span style="font-size:11px;font-weight:700;color:#0d4f8b;text-transform:uppercase;letter-spacing:0.8px;">Q5 — Products Interested In</span>
+            </td></tr>
+            <tr><td style="font-size:14px;color:#1a2b3c;">
+              ${r.productsInterested.split('; ').map(p=>`<span style="display:inline-block;background:#eef5fc;border:1px solid #b8d4ee;color:#0d4f8b;font-size:12px;font-weight:600;padding:4px 10px;border-radius:20px;margin:3px 4px 3px 0;">${p}</span>`).join('')}
+            </td></tr>
+          </table>` : ''}
+
+          <!-- Q6 NPS -->
+          <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:8px;">
+            <tr><td style="padding-bottom:6px;">
+              <span style="font-size:11px;font-weight:700;color:#0d4f8b;text-transform:uppercase;letter-spacing:0.8px;">Q6 — NPS Score (Likelihood to Recommend)</span>
+            </td></tr>
+            <tr><td>
+              <table cellpadding="0" cellspacing="0">
+                <tr>
+                  ${[0,1,2,3,4,5,6,7,8,9,10].map(n=>`<td style="padding-right:4px;"><div style="width:28px;height:28px;border-radius:6px;text-align:center;line-height:28px;font-size:12px;font-weight:700;background:${String(r.nps)===String(n)?'#0d4f8b':'#f7fafd'};color:${String(r.nps)===String(n)?'#fff':'#8a97a6'};border:1.5px solid ${String(r.nps)===String(n)?'#0d4f8b':'#e3e8ef'};">${n}</div></td>`).join('')}
+                  <td style="padding-left:8px;font-size:14px;color:#44546a;font-weight:600;">${r.nps}/10</td>
+                </tr>
+              </table>
+            </td></tr>
+          </table>
+
+        </td></tr>
+      </table>
+
+      <!-- Footer -->
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:16px;">
+        <tr><td style="text-align:center;font-size:12px;color:#8a97a6;padding:12px;">
+          BioPathogenix Client Experience Survey &bull; biopathogenix.com
+        </td></tr>
+      </table>
+
+    </td></tr>
+  </table>
+</body>
+</html>
+`;
+
+function App() {
+  const [submitted, setSubmitted] = useState(false);
+  const [showAdmin, setShowAdmin] = useState(false);
+  const [responses, setResponses] = useState(loadResponses);
+  const [errors, setErrors] = useState([]);
+  const [submitting, setSubmitting] = useState(false);
+
+  const [f, setF] = useState({
+    name:"", org:"", email:"", role:"",
+    source:"", sourceOther:"",
+    fasExp:"", fasComment:"",
+    workflow:"",
+    satisfaction:"",
+    products:[], productsOther:"",
+    nps:""
+  });
+
+  const set = (k,v)=> setF(p=>({...p,[k]:v}));
+  const toggleProduct = (p)=> setF(prev=>({...prev, products: prev.products.includes(p)? prev.products.filter(x=>x!==p): [...prev.products,p]}));
+
+  const validate = ()=>{
+    const e=[];
+    if(!f.name.trim()) e.push("Name is required");
+    if(!f.org.trim()) e.push("Organization is required");
+    if(!f.email.trim()) e.push("Email is required");
+    else if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email)) e.push("Please enter a valid email");
+    if(!f.source) e.push("Q1: Please tell us how you heard about us");
+    if(!f.fasExp) e.push("Q2: Please rate your validation/FAS experience");
+    if(!f.satisfaction) e.push("Q4: Please select your satisfaction level");
+    if(f.nps==="") e.push("Q6: Please select a recommendation score");
+    return e;
+  };
+
+  const buildRecord = ()=>({
+    submittedAt: new Date().toISOString(),
+    name:f.name, org:f.org, email:f.email, role:f.role,
+    source: f.source==="Other"? `Other: ${f.sourceOther}`: f.source,
+    validationFASRating: f.fasExp,
+    fasComment: f.fasComment,
+    workflowSuggestions: f.workflow,
+    satisfaction: f.satisfaction,
+    productsInterested: [...f.products.filter(p=>p!=="Other"), ...(f.products.includes("Other")&&f.productsOther? [`Other: ${f.productsOther}`]:[])].join("; "),
+    nps: f.nps
+  });
+
+  const encode = (data) => Object.keys(data)
+    .map(key => encodeURIComponent(key) + "=" + encodeURIComponent(data[key] || ""))
+    .join("&");
+
+  const handleSubmit = async ()=>{
+    const e=validate();
+    setErrors(e);
+    if(e.length){ window.scrollTo({top:0,behavior:"smooth"}); return; }
+    const r=buildRecord();
+    setSubmitting(true);
+
+    try {
+      // Send HTML email via EmailJS
+      emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+      await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+        to_email: "rajeswari.gopu@biopathogenix.com",
+        subject: `New Survey Response — ${r.name} (${r.org})`,
+        html_content: buildEmailHTML(r),
+        respondent_name: r.name,
+        respondent_org: r.org,
+        respondent_email: r.email,
+        submitted_at: new Date(r.submittedAt).toLocaleString()
+      });
+
+      // Save to localStorage (persist across sessions)
+      const updated = [...responses, r];
+      setResponses(updated);
+      saveResponses(updated);
+      setSubmitted(true);
+      window.scrollTo({top:0,behavior:"smooth"});
+
+    } catch(err){
+      console.error("Submit error:", err);
+      setErrors(["Submission failed. Please try again. Error: " + err.message]);
+    }
+    setSubmitting(false);
+  };
+
+  const reset = ()=>{
+    setF({name:"",org:"",email:"",role:"",source:"",sourceOther:"",fasExp:"",fasComment:"",workflow:"",satisfaction:"",products:[],productsOther:"",nps:""});
+    setSubmitted(false); setErrors([]);
+  };
+
+  const exportCSV = ()=>{
+    if(!responses.length) return;
+    const cols=["submittedAt","name","org","email","role","source","validationFASRating","fasComment","workflowSuggestions","satisfaction","productsInterested","nps"];
+    const esc=v=>`"${String(v||"").replace(/"/g,'""')}"`;
+    const csv=[cols.join(","), ...responses.map(r=>cols.map(c=>esc(r[c])).join(","))].join("\n");
+    const blob=new Blob([csv],{type:"text/csv"});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a"); a.href=url; a.download="biopathogenix_survey_responses.csv"; a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const clearAll = ()=>{
+    if(window.confirm("Clear all stored responses? This cannot be undone.")){
+      setResponses([]);
+      localStorage.removeItem(STORAGE_KEY);
+    }
+  };
+
+  const LogoSVG = () => (
+    <svg className="logo-mark" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="30" cy="30" r="28" fill="none" stroke="#1a3a6b" strokeWidth="2.5"/>
+      <path d="M22 14 Q40 22 22 30 Q40 38 22 46" fill="none" stroke="#2e6fc7" strokeWidth="3" strokeLinecap="round"/>
+      <path d="M36 14 Q18 22 36 30 Q18 38 36 46" fill="none" stroke="#1a3a6b" strokeWidth="3" strokeLinecap="round"/>
+      <line x1="24" y1="19" x2="34" y2="19" stroke="#5a93d6" strokeWidth="2" strokeLinecap="round"/>
+      <line x1="24" y1="30" x2="34" y2="30" stroke="#5a93d6" strokeWidth="2" strokeLinecap="round"/>
+      <line x1="24" y1="41" x2="34" y2="41" stroke="#5a93d6" strokeWidth="2" strokeLinecap="round"/>
+    </svg>
+  );
+
+  if(submitted){
+    return (
+      <div className="wrap">
+        <div className="card">
+          <div className="logo-bar">
+            <LogoSVG/>
+            <span className="logo-text"><span className="bio">Bio</span><span className="path">Pathogenix</span></span>
+          </div>
+          <div className="success">
+            <div className="check">✓</div>
+            <h2>Thank you for your feedback</h2>
+            <p>Your responses help us improve our validation services and support for your lab.</p>
+            <button className="btn btn-secondary" onClick={reset}>Submit another response</button>
+          </div>
+        </div>
+        <AdminBar showAdmin={showAdmin} setShowAdmin={setShowAdmin} responses={responses} exportCSV={exportCSV} clearAll={clearAll}/>
+      </div>
+    );
+  }
+
+  return (
+    <div className="wrap">
+      <div className="card">
+        <div className="logo-bar">
+          <LogoSVG/>
+          <span className="logo-text"><span className="bio">Bio</span><span className="path">Pathogenix</span></span>
+        </div>
+        <div className="header">
+          <h1>BioPathogenix Client Experience Survey</h1>
+          <p>Your feedback helps us refine our validation services and better support your laboratory. This survey takes about 3 minutes.</p>
+        </div>
+        <div className="body">
+          {errors.length>0 && (
+            <div className="error-banner">
+              <strong>Please complete the following:</strong>
+              <ul style={{margin:"6px 0 0 18px"}}>{errors.map((e,i)=><li key={i}>{e}</li>)}</ul>
+            </div>
+          )}
+
+          {/* Contact */}
+          <div className="q">
+            <span className="q-label">Your Information <span className="req">*</span></span>
+            <div className="field-grid">
+              <div>
+                <label className="field-label">Full Name *</label>
+                <input type="text" value={f.name} onChange={e=>set("name",e.target.value)} placeholder="Jane Doe"/>
+              </div>
+              <div>
+                <label className="field-label">Organization / Lab *</label>
+                <input type="text" value={f.org} onChange={e=>set("org",e.target.value)} placeholder="Acme Diagnostics"/>
+              </div>
+              <div>
+                <label className="field-label">Email *</label>
+                <input type="email" value={f.email} onChange={e=>set("email",e.target.value)} placeholder="jane@lab.com"/>
+              </div>
+              <div>
+                <label className="field-label">Role / Title</label>
+                <input type="text" value={f.role} onChange={e=>set("role",e.target.value)} placeholder="Lab Director"/>
+              </div>
+            </div>
+          </div>
+
+          {/* Q1 */}
+          <div className="q">
+            <span className="q-label"><span className="num">1.</span>How did you hear about BioPathogenix?<span className="req">*</span></span>
+            <div className="options">
+              {SOURCES.map(s=>(
+                <label key={s} className={"opt-row"+(f.source===s?" checked":"")}>
+                  <input type="radio" name="source" checked={f.source===s} onChange={()=>set("source",s)}/>
+                  {s}
+                </label>
+              ))}
+            </div>
+            {f.source==="Other" && <input className="other-input" type="text" value={f.sourceOther} onChange={e=>set("sourceOther",e.target.value)} placeholder="Please specify"/>}
+          </div>
+
+          {/* Q2 */}
+          <div className="q">
+            <span className="q-label"><span className="num">2.</span>How would you rate your experience with our validation service and Field Application Scientist (FAS)?<span className="req">*</span></span>
+            <div className="scale">
+              {[1,2,3,4,5].map(n=>(
+                <button key={n} className={"scale-btn"+(f.fasExp===String(n)?" active":"")} onClick={()=>set("fasExp",String(n))}>{n}</button>
+              ))}
+            </div>
+            <div className="scale-ends"><span>Poor</span><span>Excellent</span></div>
+            <textarea style={{marginTop:"12px"}} value={f.fasComment} onChange={e=>set("fasComment",e.target.value)} placeholder="Additional comments about your validation or FAS experience (optional)"/>
+          </div>
+
+          {/* Q3 */}
+          <div className="q">
+            <span className="q-label"><span className="num">3.</span>Is there anything you'd like to see changed or improved in the current workflow?<span className="opt">(optional)</span></span>
+            <textarea value={f.workflow} onChange={e=>set("workflow",e.target.value)} placeholder="Share any suggestions for improving the workflow..."/>
+          </div>
+
+          {/* Q4 */}
+          <div className="q">
+            <span className="q-label"><span className="num">4.</span>How satisfied were you with the validation overall?<span className="req">*</span></span>
+            <div className="sat-scale">
+              {SAT.map(s=>(
+                <button key={s} className={"sat-btn"+(f.satisfaction===s?" active":"")} onClick={()=>set("satisfaction",s)}>{s}</button>
+              ))}
+            </div>
+          </div>
+
+          {/* Q5 */}
+          <div className="q">
+            <span className="q-label"><span className="num">5.</span>What other products would you be interested in for your lab or workflows?<span className="opt">(select all that apply)</span></span>
+            <div className="options">
+              {PRODUCTS.map(p=>(
+                <label key={p} className={"opt-row"+(f.products.includes(p)?" checked":"")}>
+                  <input type="checkbox" checked={f.products.includes(p)} onChange={()=>toggleProduct(p)}/>
+                  {p}
+                </label>
+              ))}
+            </div>
+            {f.products.includes("Other") && <input className="other-input" type="text" value={f.productsOther} onChange={e=>set("productsOther",e.target.value)} placeholder="Please specify"/>}
+          </div>
+
+          {/* Q6 */}
+          <div className="q">
+            <span className="q-label"><span className="num">6.</span>How likely are you to recommend BioPathogenix to peers in your field?<span className="req">*</span></span>
+            <div className="scale">
+              {[0,1,2,3,4,5,6,7,8,9,10].map(n=>(
+                <button key={n} className={"scale-btn"+(f.nps===String(n)?" active":"")} onClick={()=>set("nps",String(n))} style={{minWidth:"32px",padding:"10px 2px",fontSize:"13px"}}>{n}</button>
+              ))}
+            </div>
+            <div className="scale-ends"><span>Not at all likely</span><span>Extremely likely</span></div>
+          </div>
+
+          <div className="actions">
+            <button className="btn btn-primary" onClick={handleSubmit} disabled={submitting}>
+              {submitting ? "Submitting…" : "Submit Survey"}
+            </button>
+          </div>
+        </div>
+      </div>
+      <AdminBar showAdmin={showAdmin} setShowAdmin={setShowAdmin} responses={responses} exportCSV={exportCSV} clearAll={clearAll}/>
+    </div>
+  );
+}
+
+function AdminBar({showAdmin,setShowAdmin,responses,exportCSV,clearAll}){
+  return (
+    <div className="admin-bar">
+      <button className="admin-link" onClick={()=>setShowAdmin(s=>!s)}>
+        {showAdmin?"Hide":"View"} collected responses ({responses.length})
+      </button>
+      {showAdmin && (
+        <div className="admin-panel">
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"14px",flexWrap:"wrap",gap:"8px"}}>
+            <h3>Collected Responses</h3>
+            <div style={{display:"flex",gap:"8px"}}>
+              <button className="btn btn-secondary" style={{padding:"8px 16px",fontSize:"13px"}} onClick={exportCSV} disabled={!responses.length}>Export CSV</button>
+              <button className="clear-btn" onClick={clearAll} disabled={!responses.length}>Clear all</button>
+            </div>
+          </div>
+          {responses.length===0? <p className="muted">No responses collected yet.</p> : (
+            <div style={{overflowX:"auto"}}>
+              <table>
+                <thead><tr>
+                  <th>Date</th><th>Name</th><th>Org</th><th>Email</th><th>Source</th><th>FAS</th><th>Satisfaction</th><th>NPS</th><th>Products</th>
+                </tr></thead>
+                <tbody>
+                  {responses.map((r,i)=>(
+                    <tr key={i}>
+                      <td>{new Date(r.submittedAt).toLocaleDateString()}</td>
+                      <td>{r.name}</td><td>{r.org}</td><td>{r.email}</td>
+                      <td>{r.source}</td><td>{r.validationFASRating}/5</td>
+                      <td>{r.satisfaction}</td><td>{r.nps}/10</td>
+                      <td style={{maxWidth:"160px"}}>{r.productsInterested}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          <p className="muted" style={{marginTop:"12px"}}>
+            ✅ Responses are saved in this browser and persist across page refreshes. Export CSV to back them up, or use Netlify dashboard for all-time records.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+ReactDOM.render(<App/>, document.getElementById("root"));
+</script>
+</body>
+</html>
