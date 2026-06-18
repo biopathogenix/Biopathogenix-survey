@@ -550,7 +550,7 @@ function App() {
     try {
       emailjs.init({ publicKey: PK });
       await emailjs.send(SVC, TPL, {
-        to_email: "rajeswari.gopu@biopathogenix.com",
+        to_email: "venkatesh.kolluru@biopathogenix.com",
         subject: "New Survey - " + r.name + " (" + r.org + ")",
         html_content: emailHTML(r),
         respondent_name: r.name,
