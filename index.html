@@ -14,28 +14,81 @@
   .wrap { max-width: 760px; margin: 0 auto; }
   .card { background: #fff; border: 1px solid #e4ebf4; border-radius: 16px; box-shadow: 0 12px 28px rgba(17,31,53,.08); overflow: hidden; }
   .logo-bar {
-    background: linear-gradient(135deg, #ffffff 0%, #f3f8ff 48%, #eef8ff 100%);
+    position: relative;
+    overflow: hidden;
+    background:
+      radial-gradient(circle at 15% 20%, rgba(255,255,255,.08), transparent 26%),
+      radial-gradient(circle at 88% 18%, rgba(74,199,255,.16), transparent 30%),
+      linear-gradient(135deg, #071425 0%, #0a1b32 45%, #123b4d 100%);
     padding: 18px 24px;
-    border-bottom: 1px solid #e4ebf4;
+    border-bottom: 1px solid rgba(255,255,255,.08);
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: 18px;
   }
-  .logo-img { height: 136px; width: auto; flex: 0 0 auto; object-fit: contain; }
-  .brand-title { display: flex; flex-direction: column; min-width: 0; padding-left: 10px; }
+  .logo-bar::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, rgba(255,255,255,.05), transparent 35%, transparent 65%, rgba(255,255,255,.03));
+    pointer-events: none;
+  }
+  .logo-slot {
+    width: 144px;
+    height: 144px;
+    flex: 0 0 auto;
+    background: linear-gradient(180deg, #ffffff 0%, #f6f9fc 100%);
+    border-radius: 18px;
+    border: 1px solid rgba(255,255,255,.22);
+    box-shadow: 0 18px 28px rgba(0,0,0,.26), inset 0 1px 0 rgba(255,255,255,.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+    z-index: 1;
+  }
+  .logo-img {
+    height: 126px;
+    max-width: 145px;
+    width: auto;
+    object-fit: contain;
+    filter: none;
+    transform: scale(1.24);
+    transform-origin: center;
+  }
+  .brand-title {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1 1 auto;
+    padding-left: 6px;
+    position: relative;
+    z-index: 1;
+  }
   .brand-title h1 {
     font-size: 21px;
     font-weight: 800;
     letter-spacing: -0.02em;
-    color: #132238;
+    color: #f4f7fb;
+    line-height: 1.15;
   }
-  .brand-title p { margin-top: 4px; font-size: 13px; color: #5b6d84; }
+  .brand-title p {
+    margin-top: 5px;
+    font-size: 13px;
+    color: rgba(244,247,251,.78);
+    max-width: 520px;
+  }
+
+
   .hdr {
-    background: linear-gradient(135deg, #2f4f95 0%, #1a8a7e 100%);
+    background: linear-gradient(135deg, #071425 0%, #0b233d 48%, #123b4d 100%);
     color: #fff;
     padding: 22px 28px;
     position: relative;
     overflow: hidden;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 12px 30px rgba(2,10,20,.28);
+    border-bottom: 1px solid rgba(255,255,255,.08);
   }
   .hdr::before {
     content: "";
@@ -131,7 +184,7 @@ const emailHTML = (r) => {
   const pill = (text,bg,fg) => `<span style="display:inline-block;background:${bg};color:${fg};border:1px solid ${bg};padding:6px 12px;border-radius:999px;font-size:13px;font-weight:700;line-height:1.2;">${esc(text)}</span>`;
   const miniPill = (text,on) => `<span style="display:inline-block;min-width:34px;text-align:center;padding:8px 0;margin:0 4px 6px 0;border-radius:7px;font-size:13px;font-weight:700;background:${on?"#2f4f95":"#f7f9fd"};color:${on?"#fff":"#7b8ca5"};border:1px solid ${on?"#2f4f95":"#d8e1ee"};">${esc(String(text))}</span>`;
   const chips = (raw) => { const items=String(raw||"").split(";").map(s=>s.trim()).filter(Boolean); if(!items.length) return "<span style='color:#8a97a6;font-size:14px;'>No response</span>"; return items.map(item=>`<span style="display:inline-block;margin:0 6px 6px 0;padding:5px 11px;border-radius:999px;border:1px solid #bfd3ee;background:#eef5ff;color:#1c4ea3;font-size:13px;line-height:1.2;">${esc(item)}</span>`).join(""); };
-  const contactCell = (label,val) => `<td width="50%" valign="top" style="padding:0 10px 14px 0;"><div style="font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:#7e8ea8;font-weight:700;margin-bottom:4px;">${label}</div><div style="font-size:15px;line-height:1.5;color:#12233f;">${val||"<span style='color:#8a97a6;'>â€”</span>"}</div></td>`;
+  const contactCell = (label,val) => `<td width="50%" valign="top" style="padding:0 10px 14px 0;"><div style="font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:#7e8ea8;font-weight:700;margin-bottom:4px;">${label}</div><div style="font-size:15px;line-height:1.5;color:#12233f;">${val||"<span style='color:#8a97a6;'>—</span>"}</div></td>`;
   const section = (title) => `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-top:22px;"><tr><td style="font-size:12px;letter-spacing:.6px;text-transform:uppercase;color:#234a8f;font-weight:700;padding-bottom:8px;">${title}</td></tr>`;
 
   return `<!doctype html><html><body style="margin:0;padding:0;background:#f4f7fb;font-family:Arial,Helvetica,sans-serif;color:#12233f;">
@@ -239,14 +292,16 @@ function App() {
     <div className="wrap">
       <div className="card">
         <div className="logo-bar">
-          <img src={FORM_LOGO} alt="BioPathogenix" className="logo-img"/>
+          <div className="logo-slot">
+            <img src={FORM_LOGO} alt="BioPathogenix" className="logo-img"/>
+          </div>
           <div className="brand-title">
             <h1>Thank you</h1>
             <p>Your survey response has been submitted successfully.</p>
           </div>
         </div>
         <div className="ok">
-          <div className="ck">âœ“</div>
+          <div className="ck">✓</div>
           <h2>Submission Complete</h2>
           <p>We received your response and emailed the team.</p>
           <div className="actions" style={{justifyContent:"center"}}>
@@ -261,7 +316,9 @@ function App() {
     <div className="wrap">
       <div className="card">
         <div className="logo-bar">
-          <img src={FORM_LOGO} alt="BioPathogenix" className="logo-img"/>
+          <div className="logo-slot">
+            <img src={FORM_LOGO} alt="BioPathogenix" className="logo-img"/>
+          </div>
           <div className="brand-title">
             <h1>BioPathogenix Client Experience Survey</h1>
             <p>Please complete the survey below. Fields marked by context are required.</p>
@@ -287,7 +344,7 @@ function App() {
                 const on = Number(f.validationRating||0) >= n;
                 return <button key={n} type="button" className={"sbtn "+(on?"on":"")} onClick={()=>set("validationRating",String(n))} style={{minWidth:46,fontSize:24,lineHeight:1,padding:"8px 0"}}>{on ? "★" : "☆"}</button>;
               })}
-              <span style={{marginLeft:8,color:"#234a8f",fontWeight:800}}>{f.validationRating ? `${f.validationRating}/5` : ""}</span>
+              <span style={{marginLeft:8,color:"#234a8f",fontWeight:800}}>{f.validationRating ? `Total: ${f.validationRating}/5` : ""}</span>
             </div>
             <div className="field" style={{marginTop:10}}><textarea value={f.validationComment} onChange={e=>set("validationComment",e.target.value)} placeholder="Optional comment"/></div>
           </div>
@@ -305,7 +362,7 @@ function App() {
                 const on = Number(f.fasRating||0) >= n;
                 return <button key={n} type="button" className={"sbtn "+(on?"on":"")} onClick={()=>set("fasRating",String(n))} style={{minWidth:46,fontSize:24,lineHeight:1,padding:"8px 0"}}>{on ? "★" : "☆"}</button>;
               })}
-              <span style={{marginLeft:8,color:"#234a8f",fontWeight:800}}>{f.fasRating ? `${f.fasRating}/5` : ""}</span>
+              <span style={{marginLeft:8,color:"#234a8f",fontWeight:800}}>{f.fasRating ? `Total: ${f.fasRating}/5` : ""}</span>
             </div>
             <div className="field" style={{marginTop:10}}><textarea value={f.fasComment} onChange={e=>set("fasComment",e.target.value)} placeholder="Optional comment"/></div>
           </div>
@@ -330,7 +387,7 @@ function App() {
             </div>
             <div className="stars">
               {Array.from({length:11},(_,i)=>10-i).map(n=><button key={n} type="button" className={"sbtn "+(String(f.likelihood)===String(n)?"on":"")} onClick={()=>set("likelihood",String(n))} style={{minWidth:36}}>{n}</button>)}
-              <span style={{marginLeft:8,color:"#234a8f",fontWeight:800}}>{f.likelihood!==""?f.likelihood+"/10":""}</span>
+              <span style={{marginLeft:8,color:"#234a8f",fontWeight:800}}>{f.likelihood!==""?`Total: ${f.likelihood}/10`:""}</span>
             </div>
             <div style={{display:"flex",justifyContent:"space-between",fontSize:12,color:"#8a97a6",marginTop:6}}>
               <span>100% likely</span>
