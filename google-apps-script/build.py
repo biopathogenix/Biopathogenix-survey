@@ -5,7 +5,7 @@ import re
 
 folder = Path(__file__).resolve().parent
 root = folder.parent
-source = (root / 'index.html').read_text(encoding='utf-8')
+source = (folder / 'original-survey.html').read_text(encoding='utf-8')
 start = source.index('const esc =')
 end = source.index('const blank =', start)
 template = source[start:end].rstrip() + '\n'

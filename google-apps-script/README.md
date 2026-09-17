@@ -6,8 +6,8 @@ The PDF is generated on Google's servers; no PDF subscription or Drive folder is
 required. Google may render fonts, rounded corners and page breaks differently
 from an email client. Verify the exported PDF after deployment.
 
-The existing GitHub Pages `index.html` remains on the working EmailJS integration
-until the Google deployment is ready. Opening `Index.html` directly on GitHub Pages
+The GitHub Pages `index.html` redirects to the deployed Google survey.
+The previous EmailJS version is preserved in `original-survey.html` as a backup. Opening `Index.html` directly on GitHub Pages
 will not work: `google.script.run` requires Google's HTML-service environment.
 
 ## One-time setup
@@ -37,9 +37,9 @@ will not work: `google.script.run` requires Google's HTML-service environment.
 9. Submit a test response. Confirm both mailboxes receive the formatted email
    with a readable PDF containing the contact information and all seven answers.
    Test long comments, line breaks, special characters, and a recommendation of 0.
-10. Send the deployed `/exec` URL to your developer to connect the existing
-    GitHub Pages link to the Google version. Until then the old link still uses
-    EmailJS and the new Google link sends email plus PDF.
+10. The existing GitHub Pages link is now connected to the Google deployment.
+    If creating a replacement deployment, update both URLs in the root
+    `index.html` (the redirect and fallback link).
 
 For later changes, save files and use **Deploy > Manage deployments > Edit >
 New version > Deploy** to update the existing URL.
@@ -67,7 +67,7 @@ New version > Deploy** to update the existing URL.
 ## Development checks
 
 Run `python google-apps-script/build.py` to regenerate the Google frontend and
-email template after editing the original survey. Run
+email template after editing `original-survey.html`. Run
 `node google-apps-script/test.cjs` for local tests with mocked Google services.
 Live mail delivery and PDF conversion must be tested in the deployed Google app.
 
@@ -77,3 +77,6 @@ Official references:
 - https://developers.google.com/apps-script/reference/mail/mail-app
 - https://developers.google.com/apps-script/reference/html/html-output
 - https://developers.google.com/apps-script/guides/services/quotas
+
+Current deployment:
+https://script.google.com/macros/s/AKfycbzCZHWogWyX3krZ_WCg_b8J6NeVR2p2B2Ty97F6wgye50d1Zvn7ra5s8i43n-rIk51-/exec
