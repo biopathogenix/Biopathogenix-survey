@@ -8,14 +8,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.12.1/html2pdf.bundle.min.js"></script>
 <style>
-  .survey-pdf { font-family: Arial, Helvetica, sans-serif; font-size: 16px; line-height: normal; color: #12233f; overflow-wrap: anywhere; }
-  .survey-pdf * { box-sizing: content-box; }
-  .survey-pdf table { font-size: inherit; }
-  .survey-pdf td { padding: 0; border: 0; text-align: inherit; vertical-align: middle; }
-  .survey-pdf td[align="center"] { text-align: center; }
-  .survey-pdf td[valign="top"] { vertical-align: top; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; background: #f4f7fb; color: #132238; line-height: 1.5; padding: 24px 16px; }
   .wrap { max-width: 760px; margin: 0 auto; }
@@ -225,26 +218,6 @@ const emailHTML = (r) => {
 </body></html>`;
 };
 
-// Use the same HTML for the email body and its PDF attachment.
-const responsePDF = async (html) => {
-  if (typeof window.html2pdf !== "function") {
-    throw new Error("The PDF generator could not load. Please refresh and try again.");
-  }
-  const content = document.createElement("div");
-  content.className = "survey-pdf";
-  content.innerHTML = new DOMParser().parseFromString(html,"text/html").body.innerHTML;
-  const dataURI = await window.html2pdf().set({
-    margin: 8,
-    image: {type:"jpeg",quality:0.9},
-    html2canvas: {scale:1.5,backgroundColor:"#ffffff",logging:false},
-    jsPDF: {unit:"mm",format:"a4",orientation:"portrait",compress:true},
-    pagebreak: {mode:["css","legacy"],avoid:["tr"]}
-  }).from(content).toPdf().outputPdf("datauristring");
-  const base64 = dataURI.split(",")[1];
-  if (!base64) throw new Error("Unable to generate the response PDF. Please try again.");
-  return base64;
-};
-
 const blank = {name:"",org:"",email:"",role:"",source:"",sourceOther:"",validationRating:"",validationComment:"",fasName:"",fasRating:"",fasComment:"",workflow:"",satisfaction:"",products:[],productsOther:"",likelihood:""};
 
 function App() {
@@ -285,21 +258,15 @@ function App() {
   });
 
   const submit = async () => {
-    if(busy) return;
     const e=valid(); setErrs(e);
     if(e.length){window.scrollTo({top:0,behavior:"smooth"});return;}
     const r=rec(); setBusy(true);
     try {
-      const html = emailHTML(r);
-      const pdf = await responsePDF(html);
       emailjs.init({publicKey:PK});
       await emailjs.send(SVC,TPL,{
         to_email:"venkatesh.kolluru@biopathogenix.com",
         subject:"New Survey - "+r.name+" ("+r.org+")",
-        html_content:html,
-        // Configure survey_pdf as a Variable Attachment in the EmailJS template.
-        survey_pdf:pdf,
-        pdf_filename:"Survey-Response-"+r.submittedAt.replace(/[:.]/g,"-")+".pdf",
+        html_content:emailHTML(r),
         respondent_name:r.name, respondent_org:r.org,
         respondent_email:r.email, submitted_at:new Date(r.submittedAt).toLocaleString()
       });
