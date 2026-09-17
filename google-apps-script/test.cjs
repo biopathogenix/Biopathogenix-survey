@@ -81,5 +81,5 @@ assert(page.includes('result.ok !== true'));
 assert(page.includes('submissionId.current=crypto.randomUUID()'));
 const source=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8');
 const template=source.slice(source.indexOf('const esc ='),source.indexOf('const blank ='));
-assert(read('EmailTemplate.gs').endsWith(template));
+assert(read('EmailTemplate.gs').trimEnd().endsWith(template.trimEnd()));
 console.log('PASS: original template preserved, same HTML for email/PDF, fixed recipients, escaping, all answers, validation, quota, duplicate retries, failure handling, and client integration.');

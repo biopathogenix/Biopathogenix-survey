@@ -47,4 +47,3 @@ const emailHTML = (r) => {
 </td></tr></table>
 </body></html>`;
 };
-
